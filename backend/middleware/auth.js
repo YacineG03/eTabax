@@ -29,23 +29,33 @@ const verifyToken = async (req, res, next) => {
 const verifyFirebaseToken = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
+    console.log('Token reçu:', token);
     
     if (!token) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Token Firebase requis' 
-      });
+      return res.status(401).json({ success: false, message: 'Token d\'authentification requis' });
     }
 
-    // Vérifier le token Firebase
-    const decodedToken = await auth.verifyIdToken(token);
-    req.user = decodedToken;
-    next();
+    try {
+      console.log('Tentative de vérification Firebase...');
+      const decodedToken = await auth.verifyIdToken(token);
+      req.user = decodedToken;
+      console.log('Token Firebase valide:', decodedToken.uid);
+      next();
+    } catch (firebaseError) {
+      console.log('Erreur Firebase, essai JWT:', firebaseError.message);
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
+        console.log('Token JWT valide:', decoded);
+        next();
+      } catch (jwtError) {
+        console.log('Erreur JWT:', jwtError.message);
+        return res.status(401).json({ success: false, message: 'Token invalide' });
+      }
+    }
   } catch (error) {
-    return res.status(401).json({ 
-      success: false, 
-      message: 'Token Firebase invalide' 
-    });
+    console.log('Erreur générale:', error.message);
+    return res.status(401).json({ success: false, message: 'Token invalide' });
   }
 };
 

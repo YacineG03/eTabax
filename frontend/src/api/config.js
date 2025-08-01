@@ -8,9 +8,14 @@ const getDefaultHeaders = () => {
   };
 
   // Ajouter le token d'authentification s'il existe
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  // Essayer tous les types de tokens possibles
+  const firebaseToken = localStorage.getItem('firebaseToken');
+  const authToken = localStorage.getItem('authToken');
+  const token = localStorage.getItem('token'); // Token standard utilisé par Login.jsx
+  const finalToken = firebaseToken || authToken || token;
+  
+  if (finalToken) {
+    headers['Authorization'] = `Bearer ${finalToken}`;
   }
 
   return headers;
@@ -58,4 +63,34 @@ const api = {
   delete: (endpoint) => apiCall(endpoint, { method: 'DELETE' }),
 };
 
-export default api; 
+// Client API compatible avec axios pour les nouveaux composants
+const apiClient = {
+  get: async (endpoint) => {
+    const response = await apiCall(endpoint, { method: 'GET' });
+    return { data: response };
+  },
+  
+  post: async (endpoint, body) => {
+    const response = await apiCall(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    return { data: response };
+  },
+  
+  put: async (endpoint, body) => {
+    const response = await apiCall(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    });
+    return { data: response };
+  },
+  
+  delete: async (endpoint) => {
+    const response = await apiCall(endpoint, { method: 'DELETE' });
+    return { data: response };
+  },
+};
+
+export default api;
+export { apiClient }; 

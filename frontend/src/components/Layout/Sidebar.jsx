@@ -21,7 +21,8 @@ import {
   FaTruck,
   FaComments,
   FaChartLine,
-  FaUserCog
+  FaUserCog,
+  FaShoppingCart
 } from 'react-icons/fa';
 
 const Sidebar = ({ user, currentPage, onNavigate }) => {
@@ -31,15 +32,9 @@ const Sidebar = ({ user, currentPage, onNavigate }) => {
   // Configuration des menus par rôle
   const menuConfig = {
     'chef-projet': [
-      { id: 'dashboard', label: 'Dashboard général', icon: FaHome, path: 'dashboard' },
-      { id: 'carte', label: 'Carte chantier', icon: FaMap, path: 'carte' },
-      { id: 'indicateurs', label: 'Indicateurs & Graphiques', icon: FaChartBar, path: 'indicateurs' },
-      { id: 'planning', label: 'Planning global', icon: FaCalendarAlt, path: 'planning' },
-      { id: 'approvisionnement', label: 'Approvisionnement & Stocks', icon: FaBoxes, path: 'approvisionnement' },
-      { id: 'alertes', label: 'Alertes critiques', icon: FaExclamationTriangle, path: 'alertes' },
-      { id: 'suggestions', label: 'Suggestions IA', icon: FaBrain, path: 'suggestions' },
-      { id: 'rapports', label: 'Rapports & Export', icon: FaFileAlt, path: 'rapports' },
-      { id: 'parametres', label: 'Paramètres projet', icon: FaCog, path: 'parametres' }
+      { id: 'dashboard', label: 'Dashboard', icon: FaHome, path: 'dashboard' },
+      { id: 'chantiers', label: 'Gestion des Chantiers', icon: FaMap, path: 'chantiers' },
+      { id: 'e-commerce', label: 'E-commerce BTP', icon: FaBoxes, path: 'magasin/commande' }
     ],
     'conducteur-travaux': [
       { id: 'vue-chantier', label: 'Vue chantier', icon: FaHome, path: 'vue-chantier' },

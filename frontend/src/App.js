@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import Accueil from './components/Accueil';
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import DashboardChefProjet from './components/Dashboard/ChefProjet/DashboardChefProjet';
@@ -12,7 +14,9 @@ import './App.css';
 
 function App() {
   const [user, setUser] = useState(null);
-  const [page, setPage] = useState('login');
+  const [page, setPage] = useState('accueil');
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -27,11 +31,18 @@ function App() {
     if (token && userData) {
       setUser(userData);
       setPage('dashboard');
+      // Redirige vers /dashboard si l'utilisateur est authentifié
+      if (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/register') {
+        navigate('/dashboard');
+      }
     } else {
       setUser(null);
-      setPage('login');
+      setPage('accueil');
+      if (location.pathname.startsWith('/dashboard')) {
+        navigate('/');
+      }
     }
-  }, []);
+  }, [navigate, location.pathname]);
 
   const layoutWithToast = (component) => (
     <>
@@ -40,27 +51,38 @@ function App() {
     </>
   );
 
-  if (page === 'login') return layoutWithToast(<Login onNavigate={p => setPage(p)} />);
-  if (page === 'register') return layoutWithToast(<Register onNavigate={p => setPage(p)} />);
+  // Rendu basé sur l'état page pour les vues non routées
+  if (page === 'login') return layoutWithToast(<Login onNavigate={(p) => setPage(p)} />);
+  if (page === 'accueil') return layoutWithToast(<Accueil onNavigate={(p) => setPage(p)} />);
+  if (page === 'register') return layoutWithToast(<Register onNavigate={(p) => setPage(p)} />);
 
-  const role = user?.role?.toLowerCase().replace(/\s/g, '');
-  if (role === 'chef-projet' || role === 'chefdeprojet') {
-    return layoutWithToast(<DashboardChefProjet user={user} />);
-  }
-  if (role === 'conducteur-travaux' || role === 'conducteurdestravaux') {
-    return layoutWithToast(<DashboardConducteurTravaux user={user} />);
-  }
-  if (role === 'chef-chantier' || role === 'chefdechantier') {
-    return layoutWithToast(<DashboardChefChantier user={user} />);
-  }
-  if (role === 'chef-equipe' || role === 'chefdequipe') {
-    return layoutWithToast(<DashboardChefEquipe user={user} />);
-  }
-  if (role === 'fournisseur') {
-    return layoutWithToast(<DashboardFournisseur user={user} />);
-  }
-
-  return layoutWithToast(<div>Bienvenue sur le Dashboard</div>);
+  // Rendu basé sur les routes pour le dashboard
+  return (
+    <Routes>
+      <Route
+        path="/dashboard/*"
+        element={
+          user ? (
+            layoutWithToast(
+              (() => {
+                const role = user?.role?.toLowerCase().replace(/\s/g, '');
+                if (role === 'chef-projet' || role === 'chefdeprojet') return <DashboardChefProjet user={user} />;
+                if (role === 'conducteur-travaux' || role === 'conducteurdestravaux') return <DashboardConducteurTravaux user={user} />;
+                if (role === 'chef-chantier' || role === 'chefdechantier') return <DashboardChefChantier user={user} />;
+                if (role === 'chef-equipe' || role === 'chefdequipe') return <DashboardChefEquipe user={user} />;
+                if (role === 'fournisseur') return <DashboardFournisseur user={user} />;
+                return <div>Rôle non reconnu</div>;
+              })()
+            )
+          ) : (
+            layoutWithToast(<div>Redirection vers login...</div>)
+          )
+        }
+      />
+      {/* Route par défaut pour gérer les cas non couverts */}
+      <Route path="*" element={layoutWithToast(<Accueil onNavigate={(p) => setPage(p)} />)} />
+    </Routes>
+  );
 }
 
 export default App;
