@@ -1,0 +1,126 @@
+.meteo-container {
+  max-width: 1000px;
+  margin: 24px auto;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 16px #0001;
+  padding: 32px 24px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+.meteo-container h2 {
+  color: #f5b942;
+  margin-bottom: 24px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.ville-form {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+.ville-form input {
+  flex-grow: 1;
+  padding: 10px 14px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #faf9f6;
+  transition: border-color 0.3s;
+}
+
+.ville-form input:focus {
+  border-color: #f5b942;
+  outline: none;
+}
+
+.ville-form button {
+  background: #f5b942;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.ville-form button:hover {
+  background: #e0a82e;
+}
+
+.meteo-box {
+  background: #fff6d6;
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0 2px 12px #f5b94288;
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.meteo-box h3 {
+  margin-bottom: 12px;
+  color: #f5b942;
+  font-weight: 700;
+}
+
+.meteo-box p {
+  font-size: 1.1rem;
+  margin: 6px 0;
+}
+
+.forecast-container {
+  background: #faf9f6;
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0 2px 12px #f5b94255;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.forecast-container h4 {
+  color: #f5b942;
+  font-weight: 700;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.forecast-container ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.forecast-container li {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f3f3f3;
+  font-size: 0.95rem;
+  color: #444;
+}
+
+.forecast-container li:last-child {
+  border-bottom: none;
+}
+
+.planning-container {
+  background: #faf9f6;
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0 2px 12px #f5b94255;
+  text-align: center;
+}
+
+.planning-container h3 {
+  color: #f5b942;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.planning-container p {
+  font-size: 1rem;
+  color: #666;
+}
