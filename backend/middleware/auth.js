@@ -1,15 +1,15 @@
-const jwt = require('jsonwebtoken');
-const { auth } = require('../config/firebase');
+const jwt = require("jsonwebtoken");
+const { auth } = require("../config/firebase");
 
 // Middleware pour vérifier le token JWT
 const verifyToken = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    
+    const token = req.headers.authorization?.split(" ")[1];
+
     if (!token) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Token d\'accès requis' 
+      return res.status(401).json({
+        success: false,
+        message: "Token d'accès requis",
       });
     }
 
@@ -18,9 +18,9 @@ const verifyToken = async (req, res, next) => {
     req.user = decoded;
     next();
   } catch (error) {
-    return res.status(401).json({ 
-      success: false, 
-      message: 'Token invalide' 
+    return res.status(401).json({
+      success: false,
+      message: "Token invalide",
     });
   }
 };
@@ -28,12 +28,12 @@ const verifyToken = async (req, res, next) => {
 // Middleware pour vérifier le token Firebase
 const verifyFirebaseToken = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    
+    const token = req.headers.authorization?.split(" ")[1];
+
     if (!token) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Token Firebase requis' 
+      return res.status(401).json({
+        success: false,
+        message: "Token Firebase requis",
       });
     }
 
@@ -42,14 +42,49 @@ const verifyFirebaseToken = async (req, res, next) => {
     req.user = decodedToken;
     next();
   } catch (error) {
-    return res.status(401).json({ 
-      success: false, 
-      message: 'Token Firebase invalide' 
+    return res.status(401).json({
+      success: false,
+      message: "Token Firebase invalide",
+    });
+  }
+};
+
+// Middleware pour vérifier que l'utilisateur est un fournisseur
+const verifyFournisseur = async (req, res, next) => {
+  try {
+    // Vérifier d'abord le token
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Token d'accès requis",
+      });
+    }
+
+    // Vérifier le token JWT
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Vérifier que l'utilisateur est un fournisseur
+    if (decoded.role !== "fournisseur") {
+      return res.status(403).json({
+        success: false,
+        message: "Accès réservé aux fournisseurs",
+      });
+    }
+
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: "Token invalide",
     });
   }
 };
 
 module.exports = {
   verifyToken,
-  verifyFirebaseToken
-}; 
+  verifyFirebaseToken,
+  verifyFournisseur,
+};

@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import './Sidebar.css';
-import { 
-  FaHome, 
-  FaMap, 
-  FaChartBar, 
-  FaCalendarAlt, 
-  FaBoxes, 
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import "./Sidebar.css";
+import {
+  FaHome,
+  FaMap,
+  FaChartBar,
+  FaCalendarAlt,
+  FaBoxes,
   FaExclamationTriangle,
   FaBrain,
   FaFileAlt,
@@ -21,8 +21,8 @@ import {
   FaTruck,
   FaComments,
   FaChartLine,
-  FaUserCog
-} from 'react-icons/fa';
+  FaUserCog,
+} from "react-icons/fa";
 
 const Sidebar = ({ user, currentPage, onNavigate }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -30,63 +30,253 @@ const Sidebar = ({ user, currentPage, onNavigate }) => {
 
   // Configuration des menus par rôle
   const menuConfig = {
-    'chef-projet': [
-      { id: 'dashboard', label: 'Dashboard général', icon: FaHome, path: 'dashboard' },
-      { id: 'carte', label: 'Carte chantier', icon: FaMap, path: 'carte' },
-      { id: 'indicateurs', label: 'Indicateurs & Graphiques', icon: FaChartBar, path: 'indicateurs' },
-      { id: 'planning', label: 'Planning global', icon: FaCalendarAlt, path: 'planning' },
-      { id: 'approvisionnement', label: 'Approvisionnement & Stocks', icon: FaBoxes, path: 'approvisionnement' },
-      { id: 'alertes', label: 'Alertes critiques', icon: FaExclamationTriangle, path: 'alertes' },
-      { id: 'suggestions', label: 'Suggestions IA', icon: FaBrain, path: 'suggestions' },
-      { id: 'rapports', label: 'Rapports & Export', icon: FaFileAlt, path: 'rapports' },
-      { id: 'parametres', label: 'Paramètres projet', icon: FaCog, path: 'parametres' }
+    "chef-projet": [
+      {
+        id: "dashboard",
+        label: "Dashboard général",
+        icon: FaHome,
+        path: "dashboard",
+      },
+      { id: "carte", label: "Carte chantier", icon: FaMap, path: "carte" },
+      {
+        id: "indicateurs",
+        label: "Indicateurs & Graphiques",
+        icon: FaChartBar,
+        path: "indicateurs",
+      },
+      {
+        id: "planning",
+        label: "Planning global",
+        icon: FaCalendarAlt,
+        path: "planning",
+      },
+      {
+        id: "approvisionnement",
+        label: "Approvisionnement & Stocks",
+        icon: FaBoxes,
+        path: "approvisionnement",
+      },
+      {
+        id: "alertes",
+        label: "Alertes critiques",
+        icon: FaExclamationTriangle,
+        path: "alertes",
+      },
+      {
+        id: "suggestions",
+        label: "Suggestions IA",
+        icon: FaBrain,
+        path: "suggestions",
+      },
+      {
+        id: "rapports",
+        label: "Rapports & Export",
+        icon: FaFileAlt,
+        path: "rapports",
+      },
+      {
+        id: "parametres",
+        label: "Paramètres projet",
+        icon: FaCog,
+        path: "parametres",
+      },
     ],
-    'conducteur-travaux': [
-      { id: 'vue-chantier', label: 'Vue chantier', icon: FaHome, path: 'vue-chantier' },
-      { id: 'zones', label: 'Zones & Activités', icon: FaMap, path: 'zones' },
-      { id: 'planning-equipes', label: 'Planning équipes', icon: FaCalendarAlt, path: 'planning-equipes' },
-      { id: 'commandes', label: 'Commandes & Stock', icon: FaBoxes, path: 'commandes' },
-      { id: 'cameras', label: 'Caméras & Sécurité', icon: FaVideo, path: 'cameras' },
-      { id: 'alertes-incidents', label: 'Alertes & Incidents', icon: FaExclamationTriangle, path: 'alertes-incidents' },
-      { id: 'optimisation', label: 'Optimisation IA', icon: FaBrain, path: 'optimisation' },
-      { id: 'communication', label: 'Communication', icon: FaComments, path: 'communication' },
-      { id: 'parametres', label: 'Paramètres', icon: FaCog, path: 'parametres' }
+    "conducteur-travaux": [
+      {
+        id: "vue-chantier",
+        label: "Vue chantier",
+        icon: FaHome,
+        path: "vue-chantier",
+      },
+      { id: "zones", label: "Zones & Activités", icon: FaMap, path: "zones" },
+      {
+        id: "planning-equipes",
+        label: "Planning équipes",
+        icon: FaCalendarAlt,
+        path: "planning-equipes",
+      },
+      {
+        id: "commandes",
+        label: "Commandes & Stock",
+        icon: FaBoxes,
+        path: "commandes",
+      },
+      {
+        id: "cameras",
+        label: "Caméras & Sécurité",
+        icon: FaVideo,
+        path: "cameras",
+      },
+      {
+        id: "alertes-incidents",
+        label: "Alertes & Incidents",
+        icon: FaExclamationTriangle,
+        path: "alertes-incidents",
+      },
+      {
+        id: "optimisation",
+        label: "Optimisation IA",
+        icon: FaBrain,
+        path: "optimisation",
+      },
+      {
+        id: "communication",
+        label: "Communication",
+        icon: FaComments,
+        path: "communication",
+      },
+      {
+        id: "parametres",
+        label: "Paramètres",
+        icon: FaCog,
+        path: "parametres",
+      },
     ],
-    'chef-chantier': [
-      { id: 'mon-espace', label: 'Mon espace', icon: FaHome, path: 'mon-espace' },
-      { id: 'taches', label: 'Tâches journalières', icon: FaClipboardList, path: 'taches' },
-      { id: 'pointage', label: 'Pointage ouvriers', icon: FaUsers, path: 'pointage' },
-      { id: 'cameras-zone', label: 'Caméras (zone)', icon: FaVideo, path: 'cameras-zone' },
-      { id: 'securite', label: 'Sécurité & EPI', icon: FaShieldAlt, path: 'securite' },
-      { id: 'stock-commandes', label: 'Stock & Commandes rapides', icon: FaBoxes, path: 'stock-commandes' },
-      { id: 'meteo', label: 'Météo & Planning', icon: FaCloudSun, path: 'meteo' },
-      { id: 'notifications', label: 'Notifications', icon: FaBell, path: 'notifications' },
-      { id: 'briefing', label: 'Briefing sécurité', icon: FaBook, path: 'briefing' }
+    "chef-chantier": [
+      {
+        id: "mon-espace",
+        label: "Mon espace",
+        icon: FaHome,
+        path: "mon-espace",
+      },
+      {
+        id: "taches",
+        label: "Tâches journalières",
+        icon: FaClipboardList,
+        path: "taches",
+      },
+      {
+        id: "pointage",
+        label: "Pointage ouvriers",
+        icon: FaUsers,
+        path: "pointage",
+      },
+      {
+        id: "cameras-zone",
+        label: "Caméras (zone)",
+        icon: FaVideo,
+        path: "cameras-zone",
+      },
+      {
+        id: "securite",
+        label: "Sécurité & EPI",
+        icon: FaShieldAlt,
+        path: "securite",
+      },
+      {
+        id: "stock-commandes",
+        label: "Stock & Commandes rapides",
+        icon: FaBoxes,
+        path: "stock-commandes",
+      },
+      {
+        id: "meteo",
+        label: "Météo & Planning",
+        icon: FaCloudSun,
+        path: "meteo",
+      },
+      {
+        id: "notifications",
+        label: "Notifications",
+        icon: FaBell,
+        path: "notifications",
+      },
+      {
+        id: "briefing",
+        label: "Briefing sécurité",
+        icon: FaBook,
+        path: "briefing",
+      },
     ],
-    'chef-equipe': [
-      { id: 'tableau-bord', label: 'Tableau de bord', icon: FaHome, path: 'tableau-bord' },
-      { id: 'taches-avancement', label: 'Tâches & Avancement', icon: FaClipboardList, path: 'taches-avancement' },
-      { id: 'equipe-presences', label: 'Équipe & Présences', icon: FaUsers, path: 'equipe-presences' },
-      { id: 'securite-zone', label: 'Sécurité (zone)', icon: FaShieldAlt, path: 'securite-zone' },
-      { id: 'materiaux', label: 'Matériaux affectés', icon: FaBoxes, path: 'materiaux' },
-      { id: 'anomalies', label: 'Anomalies / Retards', icon: FaExclamationTriangle, path: 'anomalies' },
-      { id: 'sensibilisation', label: 'Sensibilisation sécurité', icon: FaBook, path: 'sensibilisation' }
+    "chef-equipe": [
+      {
+        id: "tableau-bord",
+        label: "Tableau de bord",
+        icon: FaHome,
+        path: "tableau-bord",
+      },
+      {
+        id: "taches-avancement",
+        label: "Tâches & Avancement",
+        icon: FaClipboardList,
+        path: "taches-avancement",
+      },
+      {
+        id: "equipe-presences",
+        label: "Équipe & Présences",
+        icon: FaUsers,
+        path: "equipe-presences",
+      },
+      {
+        id: "securite-zone",
+        label: "Sécurité (zone)",
+        icon: FaShieldAlt,
+        path: "securite-zone",
+      },
+      {
+        id: "materiaux",
+        label: "Matériaux affectés",
+        icon: FaBoxes,
+        path: "materiaux",
+      },
+      {
+        id: "anomalies",
+        label: "Anomalies / Retards",
+        icon: FaExclamationTriangle,
+        path: "anomalies",
+      },
+      {
+        id: "sensibilisation",
+        label: "Sensibilisation sécurité",
+        icon: FaBook,
+        path: "sensibilisation",
+      },
     ],
-    'fournisseur': [
-      { id: 'mes-commandes', label: 'Mes commandes', icon: FaHome, path: 'mes-commandes' },
-      { id: 'produits', label: 'Produits / Services', icon: FaBoxes, path: 'produits' },
-      { id: 'bons-commande', label: 'Bons de commande', icon: FaFileAlt, path: 'bons-commande' },
-      { id: 'livraisons', label: 'Livraisons planifiées', icon: FaTruck, path: 'livraisons' },
-      { id: 'messages', label: 'Messages clients', icon: FaComments, path: 'messages' },
-      { id: 'historique', label: 'Historique / Factures', icon: FaChartLine, path: 'historique' },
-      { id: 'mon-espace-fournisseur', label: 'Mon espace fournisseur', icon: FaUserCog, path: 'mon-espace-fournisseur' }
-    ]
+    fournisseur: [
+      { id: "dashboard", label: "Dashboard", icon: FaHome, path: "dashboard" },
+      {
+        id: "produits",
+        label: "Gérer mes produits",
+        icon: FaBoxes,
+        path: "produits",
+      },
+      {
+        id: "mes-commandes",
+        label: "Mes commandes",
+        icon: FaFileAlt,
+        path: "mes-commandes",
+      },
+      {
+        id: "livraisons",
+        label: "Livraisons planifiées",
+        icon: FaTruck,
+        path: "livraisons",
+      },
+      {
+        id: "messages",
+        label: "Messages clients",
+        icon: FaComments,
+        path: "messages",
+      },
+      {
+        id: "historique",
+        label: "Historique / Factures",
+        icon: FaChartLine,
+        path: "historique",
+      },
+      {
+        id: "mon-espace-fournisseur",
+        label: "Mon espace fournisseur",
+        icon: FaUserCog,
+        path: "mon-espace-fournisseur",
+      },
+    ],
   };
 
   // Obtenir le menu selon le rôle de l'utilisateur
   const getUserMenu = () => {
-    const role = user?.role || 'chef-chantier'; // Par défaut
-    return menuConfig[role] || menuConfig['chef-chantier'];
+    const role = user?.role || "chef-chantier"; // Par défaut
+    return menuConfig[role] || menuConfig["chef-chantier"];
   };
 
   const handleMenuClick = (path) => {
@@ -98,26 +288,30 @@ const Sidebar = ({ user, currentPage, onNavigate }) => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/login';
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "/login";
   };
 
   const menuItems = getUserMenu();
 
   return (
-    <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+    <div className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
       {/* Header du sidebar */}
       <div className="sidebar-header">
         <div className="logo-section">
-          <img src={require('../../assets/logo.png')} alt="E-TABAX" className="logo logo-large" />
-          {!isCollapsed }
+          <img
+            src={require("../../assets/logo.png")}
+            alt="E-TABAX"
+            className="logo logo-large"
+          />
+          {!isCollapsed}
         </div>
-        <button 
+        <button
           className="collapse-btn"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
-          {isCollapsed ? '→' : '←'}
+          {isCollapsed ? "→" : "←"}
         </button>
       </div>
 
@@ -128,7 +322,9 @@ const Sidebar = ({ user, currentPage, onNavigate }) => {
         </div>
         {!isCollapsed && (
           <div className="user-details">
-            <div className="user-name">{user?.prenom} {user?.nom}</div>
+            <div className="user-name">
+              {user?.prenom} {user?.nom}
+            </div>
             <div className="user-role">{getRoleLabel(user?.role)}</div>
           </div>
         )}
@@ -142,11 +338,15 @@ const Sidebar = ({ user, currentPage, onNavigate }) => {
             return (
               <li key={item.id} className="nav-item">
                 <button
-                  className={`nav-link ${currentPage === item.path ? 'active' : ''}`}
+                  className={`nav-link ${
+                    currentPage === item.path ? "active" : ""
+                  }`}
                   onClick={() => handleMenuClick(item.path)}
                 >
                   <IconComponent className="nav-icon" />
-                  {!isCollapsed && <span className="nav-label">{item.label}</span>}
+                  {!isCollapsed && (
+                    <span className="nav-label">{item.label}</span>
+                  )}
                 </button>
               </li>
             );
@@ -168,13 +368,13 @@ const Sidebar = ({ user, currentPage, onNavigate }) => {
 // Fonction pour obtenir le label du rôle
 const getRoleLabel = (role) => {
   const roleLabels = {
-    'chef-projet': 'Chef de Projet',
-    'conducteur-travaux': 'Conducteur des Travaux',
-    'chef-chantier': 'Chef de Chantier',
-    'chef-equipe': 'Chef d\'Équipe',
-    'fournisseur': 'Fournisseur'
+    "chef-projet": "Chef de Projet",
+    "conducteur-travaux": "Conducteur des Travaux",
+    "chef-chantier": "Chef de Chantier",
+    "chef-equipe": "Chef d'Équipe",
+    fournisseur: "Fournisseur",
   };
-  return roleLabels[role] || 'Utilisateur';
+  return roleLabels[role] || "Utilisateur";
 };
 
 export default Sidebar;
