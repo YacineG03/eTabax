@@ -325,53 +325,6 @@ exports.validateCommande = async (req, res) => {
   }
 };
 
-// Récupérer tous les clients
-// exports.getClients = async (req, res) => {
-//   try {
-//     const { role, search } = req.query;
-    
-//     let query = db.collection('users');
-    
-//     // Filtrer par rôle si spécifié
-//     if (role) {
-//       query = query.where('role', '==', role);
-//     }
-    
-//     const snapshot = await query.get();
-//     const users = [];
-    
-//     snapshot.forEach(doc => {
-//       const userData = doc.data();
-//       // Filtrer par recherche si spécifié
-//       if (search) {
-//         const searchLower = search.toLowerCase();
-//         const matchesSearch = 
-//           userData.email?.toLowerCase().includes(searchLower) ||
-//           userData.telephone?.includes(search) ||
-//           userData.nom?.toLowerCase().includes(searchLower) ||
-//           userData.prenom?.toLowerCase().includes(searchLower);
-        
-//         if (matchesSearch) {
-//           users.push({
-//             id: doc.id,
-//             ...userData
-//           });
-//         }
-//       } else {
-//         users.push({
-//           id: doc.id,
-//           ...userData
-//         });
-//       }
-//     });
-    
-//     res.json({ success: true, users });
-//   } catch (error) {
-//     console.error('Erreur lors de la récupération des clients:', error);
-//     res.status(500).json({ success: false, message: 'Erreur lors de la récupération des clients' });
-//   }
-// };
-
 exports.getClients = async (req, res) => {
   try {
     const { role, search } = req.query;
@@ -401,5 +354,25 @@ exports.getClients = async (req, res) => {
   } catch (error) {
     console.error('Erreur lors de la récupération des clients:', error);
     res.status(500).json({ success: false, message: 'Erreur lors de la récupération des clients' });
+  }
+};
+
+exports.getClientById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const doc = await db.collection('users').doc(id).get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ success: false, message: "Client non trouvé" });
+    }
+
+    const userData = doc.data();
+    if (userData.role !== 'client') {
+      return res.status(404).json({ success: false, message: "Client non trouvé" });
+    }
+
+    res.json({ success: true, client: { id: doc.id, ...userData } });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
   }
 };

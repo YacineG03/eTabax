@@ -1,9 +1,10 @@
 // import React, { useState, useEffect } from 'react';
-// import { FaTimes, FaSearch, FaMapMarkerAlt, FaUser, FaEye } from 'react-icons/fa';
+// import { FaTimes, FaSearch, FaMapMarkerAlt, FaCheck } from 'react-icons/fa';
 // import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 // import { toast } from 'react-toastify';
 // import L from 'leaflet';
 // import 'leaflet/dist/leaflet.css';
+// import { getClients, createChantier } from '../../../api/chefProjet';
 
 // // Correction pour les icônes Leaflet
 // delete L.Icon.Default.prototype._getIconUrl;
@@ -17,70 +18,109 @@
 //   form, 
 //   setForm, 
 //   selectedLocation, 
-//   setSelectedLocation,  
+//   setSelectedLocation, 
 //   address, 
 //   setAddress, 
 //   useMap, 
 //   setUseMap, 
-//   onSubmit, 
 //   onClose 
 // }) => {
 //   const [clients, setClients] = useState([]);
-//   const [showClientSearch, setShowClientSearch] = useState(false);
 //   const [searchTerm, setSearchTerm] = useState('');
 //   const [selectedClient, setSelectedClient] = useState(null);
-//   const handleMapClick = React.useCallback((e) => {
-//     const newLocation = [e.latlng.lat, e.latlng.lng];
-//     setSelectedLocation(newLocation);
-//     setAddress(`Lat: ${newLocation[0].toFixed(6)}, Lng: ${newLocation[1].toFixed(6)}`);
-//   }, [setSelectedLocation, setAddress]);
+//   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const clientsPerPage = 5;
 
-//   const handleSubmit = React.useCallback((e) => {
-//     e.preventDefault();
-//     onSubmit();
-//   }, [onSubmit]);
-
-//   // Charger les clients depuis Firebase
+//   // Charger les clients depuis Firebase avec filtre rôle "client"
 //   useEffect(() => {
 //     const fetchClients = async () => {
 //       try {
-//         const response = await fetch('/api/chef-projet/clients?role=client', {
-//           headers: {
-//             'Authorization': `Bearer ${localStorage.getItem('firebaseToken') || localStorage.getItem('authToken') || localStorage.getItem('token')}`
-//           }
-//         });
-//         if (response.ok) {
-//           const data = await response.json();
-//           setClients(data.users || []);
+//         const data = await getClients();
+//         if (data.success) {
+//           setClients(data.users.filter(client => client.role === 'client') || []);
+//         } else {
+//           throw new Error(data.message || 'Réponse invalide du serveur');
 //         }
 //       } catch (error) {
 //         console.error('Erreur lors du chargement des clients:', error);
+//         toast.error(`Erreur lors du chargement des clients: ${error.message}`);
 //       }
 //     };
 //     fetchClients();
 //   }, []);
 
-//   const handleClientSearch = () => {
-//     setShowClientSearch(true);
-//   };
+//   // Mettre à jour le formulaire uniquement si le client sélectionné change et si les champs ne sont pas déjà mis à jour
+//   useEffect(() => {
+//     if (selectedClient && (!form.proprietaireEmail || !form.proprietaireTelephone)) {
+//       if (selectedClient.email) {
+//         setForm(prevForm => ({ ...prevForm, proprietaireEmail: selectedClient.email, proprietaireTelephone: '' }));
+//       } else if (selectedClient.telephone) {
+//         setForm(prevForm => ({ ...prevForm, proprietaireTelephone: selectedClient.telephone, proprietaireEmail: '' }));
+//       }
+//     }
+//   }, [selectedClient, setForm, form.proprietaireEmail, form.proprietaireTelephone]);
 
+//   // Mettre à jour la recherche en temps réel
 //   const handleClientSelect = (client) => {
 //     setSelectedClient(client);
-//     if (form.proprietaireType === 'email') {
-//       setForm({ ...form, proprietaireEmail: client.email });
-//     } else {
-//       setForm({ ...form, proprietaireTelephone: client.telephone });
-//     }
-//     setShowClientSearch(false);
-//     setSearchTerm('');
+//     setIsClientModalOpen(false); // Ferme le modal après sélection
 //   };
 
 //   const filteredClients = clients.filter(client => 
-//     client.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//     client.telephone?.includes(searchTerm) ||
-//     client.nom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//     client.prenom?.toLowerCase().includes(searchTerm.toLowerCase())
+//     (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+//     (client.telephone && client.telephone.includes(searchTerm))
 //   );
+
+//   // Pagination
+//   const indexOfLastClient = currentPage * clientsPerPage;
+//   const indexOfFirstClient = indexOfLastClient - clientsPerPage;
+//   const currentClients = filteredClients.slice(indexOfFirstClient, indexOfLastClient);
+//   const totalPages = Math.ceil(filteredClients.length / clientsPerPage);
+
+//   const handlePageChange = (pageNumber) => {
+//     setCurrentPage(pageNumber);
+//   };
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     if (!form.nom || (!form.proprietaireEmail && !form.proprietaireTelephone)) {
+//       toast.error('Veuillez remplir le nom du chantier et sélectionner un client.');
+//       return;
+//     }
+
+//     try {
+//       // Débogage des données envoyées
+//       console.log('Données envoyées à createChantier:', {
+//         nom: form.nom,
+//         proprietaireEmailOrTel: form.proprietaireEmail || form.proprietaireTelephone,
+//         localisation: useMap ? {
+//           latitude: selectedLocation[0],
+//           longitude: selectedLocation[1]
+//         } : { address: address || 'Adresse non spécifiée' }
+//       });
+
+//       const chantierData = {
+//         nom: form.nom,
+//         proprietaireEmailOrTel: form.proprietaireEmail || form.proprietaireTelephone,
+//         geolocalisation: useMap
+//           ? {
+//               latitude: selectedLocation[0],
+//               longitude: selectedLocation[1]
+//             }
+//           : {
+//               address: address || 'Adresse non spécifiée'
+//             }
+//       };
+
+//       await createChantier(chantierData);
+//       toast.success('Chantier créé avec succès !');
+//       onClose();
+//     } catch (error) {
+//       console.error('Erreur lors de la création du chantier:', error);
+//       toast.error(`Erreur lors de la création du chantier: ${error.message}`);
+//     }
+//   };
 
 //   return (
 //     <div className="nouveau-chantier-overlay">
@@ -107,82 +147,31 @@
 //               </div>
               
 //               <div className="form-group">
-//                 <label>Type de Contact Propriétaire</label>
-//                 <div className="contact-type-selector">
-//                   <label className="radio-label">
-//                     <input 
-//                       type="radio" 
-//                       name="contactType" 
-//                       value="email"
-//                       checked={form.proprietaireType === 'email'}
-//                       onChange={(e) => setForm({ ...form, proprietaireType: e.target.value })}
-//                     />
-//                     Email
-//                   </label>
-//                   <label className="radio-label">
-//                     <input 
-//                       type="radio" 
-//                       name="contactType" 
-//                       value="telephone"
-//                       checked={form.proprietaireType === 'telephone'}
-//                       onChange={(e) => setForm({ ...form, proprietaireType: e.target.value })}
-//                     />
-//                     Téléphone
-//                   </label>
+//                 <label>Client</label>
+//                 <div className="client-search-section">
+//                   <button 
+//                     type="button" 
+//                     className="client-search-btn"
+//                     onClick={() => setIsClientModalOpen(true)}
+//                   >
+//                     <FaSearch /> Rechercher un client
+//                   </button>
+//                   {selectedClient && (
+//                     <div className="selected-client">
+//                       <span>{selectedClient.prenom} {selectedClient.nom} ({selectedClient.email || selectedClient.telephone})</span>
+//                       <button 
+//                         className="clear-client-btn"
+//                         onClick={() => {
+//                           setSelectedClient(null);
+//                           setForm({ ...form, proprietaireEmail: '', proprietaireTelephone: '' });
+//                         }}
+//                       >
+//                         <FaTimes />
+//                       </button>
+//                     </div>
+//                   )}
 //                 </div>
 //               </div>
-              
-//                              <div className="form-group">
-//                  <label>Rechercher un Client</label>
-//                  <div className="client-search-section">
-//                    <button 
-//                      type="button" 
-//                      className="client-search-btn"
-//                      onClick={handleClientSearch}
-//                    >
-//                      <FaUser /> Rechercher un client existant
-//                    </button>
-//                    {selectedClient && (
-//                      <div className="selected-client">
-//                        <span>✅ Client sélectionné: {selectedClient.prenom} {selectedClient.nom}</span>
-//                        <button 
-//                          type="button" 
-//                          className="clear-client-btn"
-//                          onClick={() => {
-//                            setSelectedClient(null);
-//                            setForm({ ...form, proprietaireEmail: '', proprietaireTelephone: '' });
-//                          }}
-//                        >
-//                          ✕
-//                        </button>
-//                      </div>
-//                    )}
-//                  </div>
-//                </div>
-
-//                {form.proprietaireType === 'email' ? (
-//                  <div className="form-group">
-//                    <label>Email Propriétaire</label>
-//                    <input 
-//                      type="email" 
-//                      value={form.proprietaireEmail} 
-//                      onChange={(e) => setForm({ ...form, proprietaireEmail: e.target.value })} 
-//                      placeholder="proprietaire@email.com"
-//                      readOnly={selectedClient}
-//                    />
-//                  </div>
-//                ) : (
-//                  <div className="form-group">
-//                    <label>Téléphone Propriétaire</label>
-//                    <input 
-//                      type="tel" 
-//                      value={form.proprietaireTelephone} 
-//                      onChange={(e) => setForm({ ...form, proprietaireTelephone: e.target.value })} 
-//                      placeholder="+221 77 123 45 67"
-//                      readOnly={selectedClient}
-//                    />
-//                  </div>
-//                )}
               
 //               <div className="form-group">
 //                 <label>Localisation du Chantier</label>
@@ -236,11 +225,11 @@
 //                 </div>
 //               )}
               
-//                              <div style={{ marginTop: 'auto', paddingTop: '20px' }}>
-//                  <button type="submit" className="create-btn">
-//                    🚀 Créer le Chantier
-//                  </button>
-//                </div>
+//               <div style={{ marginTop: 'auto', paddingTop: '20px' }}>
+//                 <button type="submit" className="create-btn">
+//                   🚀 Créer le Chantier
+//                 </button>
+//               </div>
 //             </form>
 //           </div>
           
@@ -275,7 +264,11 @@
 //                   center={selectedLocation} 
 //                   zoom={13} 
 //                   style={{ height: '400px', width: '100%' }}
-//                   onClick={handleMapClick}
+//                   onClick={(e) => {
+//                     const newLocation = [e.latlng.lat, e.latlng.lng];
+//                     setSelectedLocation(newLocation);
+//                     setAddress(`Lat: ${newLocation[0].toFixed(6)}, Lng: ${newLocation[1].toFixed(6)}`);
+//                   }}
 //                   key={`map-${selectedLocation[0]}-${selectedLocation[1]}`}
 //                 >
 //                   <TileLayer
@@ -308,73 +301,86 @@
 //                 </div>
 //               </div>
 //             </div>
-//                      )}
-//          </div>
-//        </div>
+//           )}
+//         </div>
+//       </div>
 
-//        {/* Modal de recherche de clients */}
-//        {showClientSearch && (
-//          <div className="client-search-overlay">
-//            <div className="client-search-modal">
-//              <div className="client-search-header">
-//                <h3>🔍 Rechercher un Client</h3>
-//                <button 
-//                  className="close-btn" 
-//                  onClick={() => setShowClientSearch(false)}
-//                >
-//                  <FaTimes />
-//                </button>
-//              </div>
-             
-//              <div className="client-search-content">
-//                <div className="search-input-container">
-//                  <FaSearch className="search-icon" />
-//                  <input
-//                    type="text"
-//                    placeholder="Rechercher par nom, prénom, email ou téléphone..."
-//                    value={searchTerm}
-//                    onChange={(e) => setSearchTerm(e.target.value)}
-//                    className="client-search-input"
-//                  />
-//                </div>
-               
-//                <div className="clients-list">
-//                  {filteredClients.length > 0 ? (
-//                    filteredClients.map((client) => (
-//                      <div 
-//                        key={client.id} 
-//                        className="client-item"
-//                        onClick={() => handleClientSelect(client)}
-//                      >
-//                        <div className="client-info">
-//                          <strong>{client.prenom} {client.nom}</strong>
-//                          <span>{client.email}</span>
-//                          <span>{client.telephone}</span>
-//                        </div>
-//                        <FaEye className="view-icon" />
-//                      </div>
-//                    ))
-//                  ) : (
-//                    <div className="no-clients">
-//                      {searchTerm ? 'Aucun client trouvé' : 'Aucun client disponible'}
-//                    </div>
-//                  )}
-//                </div>
-//              </div>
-//            </div>
-//          </div>
-//        )}
-//      </div>
-//    );
-//  };
+//       {/* Modal de recherche de clients */}
+//       {isClientModalOpen && (
+//         <div className="client-search-overlay">
+//           <div className="client-search-modal">
+//             <div className="client-search-header">
+//               <h3>Rechercher un Client</h3>
+//               <button 
+//                 className="close-btn" 
+//                 onClick={() => setIsClientModalOpen(false)}
+//               >
+//                 <FaTimes />
+//               </button>
+//             </div>
+//             <div className="client-search-content">
+//               <div className="search-input-container">
+//                 <FaSearch className="search-icon" />
+//                 <input
+//                   type="text"
+//                   placeholder="Entrez un email ou un téléphone (ex: user@example.com ou +221771234567)"
+//                   value={searchTerm}
+//                   onChange={(e) => setSearchTerm(e.target.value)}
+//                   className="client-search-input"
+//                 />
+//               </div>
+//               {currentClients.length > 0 ? (
+//                 <div className="clients-list">
+//                   {currentClients.map((client) => (
+//                     <div 
+//                       key={client.id} 
+//                       className="client-item"
+//                       onClick={() => handleClientSelect(client)}
+//                     >
+//                       <div className="client-info">
+//                         <strong>{client.prenom} {client.nom}</strong>
+//                         <span>{client.email || client.telephone}</span>
+//                       </div>
+//                       <FaCheck className="view-icon" />
+//                     </div>
+//                   ))}
+//                 </div>
+//               ) : (
+//                 searchTerm && (
+//                   <div className="no-clients">
+//                     Aucun client trouvé avec cet email ou ce téléphone
+//                   </div>
+//                 )
+//               )}
+//               {totalPages > 1 && (
+//                 <div className="pagination">
+//                   {Array.from({ length: totalPages }, (_, index) => (
+//                     <button
+//                       key={index + 1}
+//                       className={`pagination-btn ${currentPage === index + 1 ? 'active' : ''}`}
+//                       onClick={() => handlePageChange(index + 1)}
+//                     >
+//                       {index + 1}
+//                     </button>
+//                   ))}
+//                 </div>
+//               )}
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
 
-// export default React.memo(ChantierForm); 
+// export default React.memo(ChantierForm);
 import React, { useState, useEffect } from 'react';
-import { FaTimes, FaSearch, FaMapMarkerAlt, FaUser, FaEye } from 'react-icons/fa';
+import { FaTimes, FaSearch, FaMapMarkerAlt, FaCheck } from 'react-icons/fa';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { toast } from 'react-toastify';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { getClients, createChantier } from '../../../api/chefProjet';
 
 // Correction pour les icônes Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -383,6 +389,23 @@ L.Icon.Default.mergeOptions({
   iconUrl: require('leaflet/dist/images/marker-icon.png'),
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
+
+// Fonction pour géocodage inverse via Nominatim
+const reverseGeocode = async (lat, lng) => {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+    );
+    const data = await response.json();
+    if (data && data.display_name) {
+      return data.display_name;
+    }
+    return `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`; // Fallback si aucune adresse trouvée
+  } catch (error) {
+    console.error('Erreur de géocodage inverse:', error);
+    return `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`; // Fallback en cas d'erreur
+  }
+};
 
 const ChantierForm = ({ 
   form, 
@@ -393,56 +416,48 @@ const ChantierForm = ({
   setAddress, 
   useMap, 
   setUseMap, 
-  onSubmit, 
   onClose 
 }) => {
   const [clients, setClients] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClient, setSelectedClient] = useState(null);
+  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const clientsPerPage = 5;
 
   // Charger les clients depuis Firebase avec filtre rôle "client"
-useEffect(() => {
-  const fetchClients = async () => {
-    const token = localStorage.getItem('firebaseToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
-    console.log('Token utilisé:', token);
-    try {
-      const response = await fetch('/api/chef-projet/clients?role=client', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Erreur HTTP ${response.status}: ${errorText.substring(0, 100)}...`);
-      }
-      const data = await response.json();
-      if (data.success) {
-        setClients(data.users.filter(client => client.role === 'client') || []);
-      } else {
-        throw new Error(data.message || 'Réponse invalide du serveur');
-      }
-    } catch (error) {
-      console.error('Erreur lors du chargement des clients:', error);
-      toast.error(`Erreur lors du chargement des clients: ${error.message}`);
-    }
-  };
-  fetchClients();
-}, []);
-  // Mettre à jour le formulaire lorsque un client est sélectionné
   useEffect(() => {
-    if (selectedClient) {
+    const fetchClients = async () => {
+      try {
+        const data = await getClients();
+        if (data.success) {
+          setClients(data.users.filter(client => client.role === 'client') || []);
+        } else {
+          throw new Error(data.message || 'Réponse invalide du serveur');
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des clients:', error);
+        toast.error(`Erreur lors du chargement des clients: ${error.message}`);
+      }
+    };
+    fetchClients();
+  }, []);
+
+  // Mettre à jour le formulaire uniquement si le client sélectionné change et si les champs ne sont pas déjà mis à jour
+  useEffect(() => {
+    if (selectedClient && (!form.proprietaireEmail || !form.proprietaireTelephone)) {
       if (selectedClient.email) {
-        setForm({ ...form, proprietaireEmail: selectedClient.email, proprietaireTelephone: '' });
+        setForm(prevForm => ({ ...prevForm, proprietaireEmail: selectedClient.email, proprietaireTelephone: '' }));
       } else if (selectedClient.telephone) {
-        setForm({ ...form, proprietaireTelephone: selectedClient.telephone, proprietaireEmail: '' });
+        setForm(prevForm => ({ ...prevForm, proprietaireTelephone: selectedClient.telephone, proprietaireEmail: '' }));
       }
     }
-  }, [selectedClient, setForm, form]);
+  }, [selectedClient, setForm, form.proprietaireEmail, form.proprietaireTelephone]);
 
   // Mettre à jour la recherche en temps réel
   const handleClientSelect = (client) => {
     setSelectedClient(client);
-    setSearchTerm(client.email || client.telephone || '');
+    setIsClientModalOpen(false); // Ferme le modal après sélection
   };
 
   const filteredClients = clients.filter(client => 
@@ -450,13 +465,53 @@ useEffect(() => {
     (client.telephone && client.telephone.includes(searchTerm))
   );
 
-  const handleSubmit = (e) => {
+  // Pagination
+  const indexOfLastClient = currentPage * clientsPerPage;
+  const indexOfFirstClient = indexOfLastClient - clientsPerPage;
+  const currentClients = filteredClients.slice(indexOfFirstClient, indexOfLastClient);
+  const totalPages = Math.ceil(filteredClients.length / clientsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.nom || (!form.proprietaireEmail && !form.proprietaireTelephone)) {
       toast.error('Veuillez remplir le nom du chantier et sélectionner un client.');
       return;
     }
-    onSubmit();
+
+    try {
+      const geolocalisation = { address: address || 'Adresse non spécifiée' };
+      console.log('Données envoyées à createChantier:', {
+        nom: form.nom,
+        proprietaireEmailOrTel: form.proprietaireEmail || form.proprietaireTelephone,
+        geolocalisation
+      });
+
+      const chantierData = {
+        nom: form.nom,
+        proprietaireEmailOrTel: form.proprietaireEmail || form.proprietaireTelephone,
+        geolocalisation
+      };
+
+      await createChantier(chantierData);
+      toast.success('Chantier créé avec succès !');
+      onClose();
+    } catch (error) {
+      console.error('Erreur lors de la création du chantier:', error);
+      toast.error(`Erreur lors de la création du chantier: ${error.message}`);
+    }
+  };
+
+  // Mettre à jour l'adresse lors du clic sur la carte
+  const handleMapClick = async (e) => {
+    const newLocation = [e.latlng.lat, e.latlng.lng];
+    setSelectedLocation(newLocation);
+    const newAddress = await reverseGeocode(newLocation[0], newLocation[1]);
+    setAddress(newAddress);
+    toast.success('Emplacement sélectionné avec succès !');
   };
 
   return (
@@ -484,39 +539,30 @@ useEffect(() => {
               </div>
               
               <div className="form-group">
-                <label>Rechercher un Client par Email ou Téléphone</label>
-                <div className="search-input-container">
-                  <FaSearch className="search-icon" />
-                  <input
-                    type="text"
-                    placeholder="Entrez un email ou un téléphone (ex: user@example.com ou +221771234567)"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="client-search-input"
-                  />
-                </div>
-                {filteredClients.length > 0 && (
-                  <div className="clients-list">
-                    {filteredClients.map((client) => (
-                      <div 
-                        key={client.id} 
-                        className="client-item"
-                        onClick={() => handleClientSelect(client)}
+                <label>Client</label>
+                <div className="client-search-section">
+                  <button 
+                    type="button" 
+                    className="client-search-btn"
+                    onClick={() => setIsClientModalOpen(true)}
+                  >
+                    <FaSearch /> Rechercher un client
+                  </button>
+                  {selectedClient && (
+                    <div className="selected-client">
+                      <span>{selectedClient.prenom} {selectedClient.nom} ({selectedClient.email || selectedClient.telephone})</span>
+                      <button 
+                        className="clear-client-btn"
+                        onClick={() => {
+                          setSelectedClient(null);
+                          setForm({ ...form, proprietaireEmail: '', proprietaireTelephone: '' });
+                        }}
                       >
-                        <div className="client-info">
-                          <strong>{client.prenom} {client.nom}</strong>
-                          <span>{client.email || client.telephone}</span>
-                        </div>
-                        <FaEye className="view-icon" />
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {searchTerm && filteredClients.length === 0 && (
-                  <div className="no-clients">
-                    Aucun client trouvé avec cet email ou ce téléphone
-                  </div>
-                )}
+                        <FaTimes />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
               
               <div className="form-group">
@@ -545,31 +591,20 @@ useEffect(() => {
                 </div>
               </div>
               
-              {useMap ? (
-                <div className="form-group">
-                  <label>Emplacement sélectionné</label>
-                  <input 
-                    type="text" 
-                    value={address || `Lat: ${selectedLocation[0].toFixed(6)}, Lng: ${selectedLocation[1].toFixed(6)}`}
-                    readOnly
-                    placeholder="Cliquez sur la carte pour sélectionner l'emplacement"
-                    className="location-display"
-                  />
+              <div className="form-group">
+                <label>Adresse du chantier</label>
+                <input 
+                  type="text" 
+                  value={address || ''}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder={useMap ? 'Cliquez sur la carte pour sélectionner une adresse' : 'Ex: Rue 10, Dakar, Sénégal'}
+                  readOnly={useMap}
+                  className="location-display"
+                />
+                <div className="info-text">
+                  💡 {useMap ? 'Sélectionnez un emplacement sur la carte pour obtenir une adresse.' : 'Saisissez l\'adresse complète du chantier.'}
                 </div>
-              ) : (
-                <div className="manual-location-section">
-                  <label>📍 Adresse du chantier</label>
-                  <input 
-                    type="text" 
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="Ex: Rue 10, Dakar, Sénégal"
-                  />
-                  <div className="info-text">
-                    💡 Saisissez l'adresse complète du chantier pour faciliter la localisation
-                  </div>
-                </div>
-              )}
+              </div>
               
               <div style={{ marginTop: 'auto', paddingTop: '20px' }}>
                 <button type="submit" className="create-btn">
@@ -579,7 +614,7 @@ useEffect(() => {
             </form>
           </div>
           
-          {useMap ? (
+          {useMap && (
             <div className="map-section">
               <div className="map-header">
                 <div className="search-container">
@@ -610,12 +645,7 @@ useEffect(() => {
                   center={selectedLocation} 
                   zoom={13} 
                   style={{ height: '400px', width: '100%' }}
-                  onClick={(e) => {
-                    const newLocation = [e.latlng.lat, e.latlng.lng];
-                    setSelectedLocation(newLocation);
-                    setAddress(`Lat: ${newLocation[0].toFixed(6)}, Lng: ${newLocation[1].toFixed(6)}`);
-                  }}
-                  key={`map-${selectedLocation[0]}-${selectedLocation[1]}`}
+                  onClick={handleMapClick}
                 >
                   <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -627,29 +657,81 @@ useEffect(() => {
                         <FaMapMarkerAlt style={{ color: '#f5b942' }} />
                         <strong>Emplacement du Chantier</strong>
                         <br />
-                        Latitude: {selectedLocation[0].toFixed(6)}
-                        <br />
-                        Longitude: {selectedLocation[1].toFixed(6)}
+                        Adresse: {address || 'Sélectionnez un emplacement'}
                       </div>
                     </Popup>
                   </Marker>
                 </MapContainer>
               </div>
             </div>
-          ) : (
-            <div className="manual-location-info">
-              <div className="manual-location-section">
-                <label>🗺️ Mode Saisie Manuelle</label>
-                <div className="info-text">
-                  <p>✅ Vous avez choisi la saisie manuelle de l'adresse</p>
-                  <p>📝 L'adresse saisie sera utilisée pour localiser le chantier</p>
-                  <p>💡 Vous pouvez toujours revenir à la carte en changeant l'option ci-dessus</p>
-                </div>
-              </div>
-            </div>
           )}
         </div>
       </div>
+
+      {/* Modal de recherche de clients */}
+      {isClientModalOpen && (
+        <div className="client-search-overlay">
+          <div className="client-search-modal">
+            <div className="client-search-header">
+              <h3>Rechercher un Client</h3>
+              <button 
+                className="close-btn" 
+                onClick={() => setIsClientModalOpen(false)}
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div className="client-search-content">
+              <div className="search-input-container">
+                <FaSearch className="search-icon" />
+                <input
+                  type="text"
+                  placeholder="Entrez un email ou un téléphone (ex: user@example.com ou +221771234567)"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="client-search-input"
+                />
+              </div>
+              {currentClients.length > 0 ? (
+                <div className="clients-list">
+                  {currentClients.map((client) => (
+                    <div 
+                      key={client.id} 
+                      className="client-item"
+                      onClick={() => handleClientSelect(client)}
+                    >
+                      <div className="client-info">
+                        <strong>{client.prenom} {client.nom}</strong>
+                        <span>{client.email || client.telephone}</span>
+                      </div>
+                      <FaCheck className="view-icon" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                searchTerm && (
+                  <div className="no-clients">
+                    Aucun client trouvé avec cet email ou ce téléphone
+                  </div>
+                )
+              )}
+              {totalPages > 1 && (
+                <div className="pagination">
+                  {Array.from({ length: totalPages }, (_, index) => (
+                    <button
+                      key={index + 1}
+                      className={`pagination-btn ${currentPage === index + 1 ? 'active' : ''}`}
+                      onClick={() => handlePageChange(index + 1)}
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -366,3 +366,4 @@ ${reportData.report.stock.map(s => `${s.id}: ${s.quantite} (Seuil: ${s.seuil})`)
     res.status(500).json({ success: false, message: e.message });
   }
 };
+

@@ -16,6 +16,8 @@ router.get('/chantiers/:id', chefDeProjetController.getChantier);
 router.put('/chantiers/:id', chefDeProjetController.updateChantier);
 router.delete('/chantiers/:id', chefDeProjetController.deleteChantier);
 router.get('/clients', chefDeProjetController.getClients);
+router.get('/clients/:id', chefDeProjetController.getClientById);
+
 
 // Anciennes fonctionnalités liées à un chantier spécifique
 router.post('/chantiers/:chantierId/conducteur-travaux', chefDeProjetController.defineConducteurTravaux);

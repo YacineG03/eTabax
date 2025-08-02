@@ -10,6 +10,8 @@ export const getChantiers = async () => {
   }
 };
 
+
+
 export const getChantier = async (id) => {
   try {
     const response = await apiClient.get(`/chef-projet/chantiers/${id}`);
@@ -121,3 +123,31 @@ export const createPlanification = async (chantierId, planificationData) => {
   }
 }; 
 
+export const getClients = async () => {
+  try {
+    const response = await apiClient.get('/chef-projet/clients?role=client');
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Erreur lors de la récupération des clients');
+  }
+};
+
+export const searchClientById = async (id) => {
+  try {
+    const response = await apiClient.get('/chef-projet/clients', {
+      params: { search: id, role: 'client' }
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Erreur lors de la recherche du client');
+  }
+};
+
+export const getClientById = async (id) => {
+  try {
+    const response = await apiClient.get(`/chef-projet/clients/${id}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Erreur lors de la récupération du client');
+  }
+};

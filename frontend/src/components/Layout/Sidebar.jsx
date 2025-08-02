@@ -32,9 +32,28 @@ const Sidebar = ({ user, currentPage, onNavigate }) => {
   // Configuration des menus par rôle
   const menuConfig = {
     'chef-projet': [
+      { id: 'dashboard', label: 'Dashboard général', icon: FaHome, path: 'dashboard' },
+      { id: 'chantiers', label: 'Chantiers', icon: FaMap, path: 'chantiers' },
+      { id: 'e-commerce', label: 'E-commerce', icon: FaCalendarAlt, path: 'magasin/commande' },
+    
+
+     /*  { id: 'carte', label: 'Carte chantier', icon: FaMap, path: 'carte' },
+      { id: 'indicateurs', label: 'Indicateurs & Graphiques', icon: FaChartBar, path: 'indicateurs' },
+      { id: 'planning', label: 'Planning global', icon: FaCalendarAlt, path: 'planning' },
+      { id: 'approvisionnement', label: 'Approvisionnement & Stocks', icon: FaBoxes, path: 'approvisionnement' },
+      { id: 'alertes', label: 'Alertes critiques', icon: FaExclamationTriangle, path: 'alertes' },
+      { id: 'suggestions', label: 'Suggestions IA', icon: FaBrain, path: 'suggestions' },
+      { id: 'rapports', label: 'Rapports & Export', icon: FaFileAlt, path: 'rapports' },
+      { id: 'parametres', label: 'Paramètres projet', icon: FaCog, path: 'parametres' } */
+    ],
+    'client': [
       { id: 'dashboard', label: 'Dashboard', icon: FaHome, path: 'dashboard' },
-      { id: 'chantiers', label: 'Gestion des Chantiers', icon: FaMap, path: 'chantiers' },
-      { id: 'e-commerce', label: 'E-commerce BTP', icon: FaBoxes, path: 'magasin/commande' }
+      { id: 'chantiers', label: 'Chantiers', icon: FaCog, path: 'chantiers' },
+      { id: 'sotrac', label: 'SOTRAC', icon: FaCog, path: 'sotrac' },
+      { id: 'taches-avancement', label: 'Tâches & Avancement', icon: FaCog, path: 'taches-avancement' },
+      { id: 'magasin', label: 'Magasin', icon: FaShoppingCart, path: 'magasin' },
+      { id: 'anomalies', label: 'Anomalies/Retards', icon: FaExclamationTriangle, path: 'anomalies' },
+      { id: 'parametres', label: 'Paramètres', icon: FaUserCog, path: 'parametres' }
     ],
     'conducteur-travaux': [
       { id: 'vue-chantier', label: 'Vue chantier', icon: FaHome, path: 'vue-chantier' },
@@ -79,10 +98,15 @@ const Sidebar = ({ user, currentPage, onNavigate }) => {
   };
 
   // Obtenir le menu selon le rôle de l'utilisateur
-  const getUserMenu = () => {
+ /*  const getUserMenu = () => {
     const role = user?.role || 'chef-chantier'; // Par défaut
     return menuConfig[role] || menuConfig['chef-chantier'];
+  }; */
+  const getUserMenu = () => {
+    const role = user?.role?.toLowerCase() || 'client'; // Par défaut 'client'
+    return menuConfig[role] || menuConfig['client'];
   };
+  
 
   const handleMenuClick = (path) => {
     if (onNavigate) {
@@ -167,7 +191,8 @@ const getRoleLabel = (role) => {
     'conducteur-travaux': 'Conducteur des Travaux',
     'chef-chantier': 'Chef de Chantier',
     'chef-equipe': 'Chef d\'Équipe',
-    'fournisseur': 'Fournisseur'
+    'fournisseur': 'Fournisseur',
+    'client': 'Client'
   };
   return roleLabels[role] || 'Utilisateur';
 };

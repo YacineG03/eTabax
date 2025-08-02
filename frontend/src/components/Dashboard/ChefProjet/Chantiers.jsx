@@ -1,14 +1,15 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { getChantiers, createChantier, updateChantier, deleteChantier } from '../../../api/chefProjet';
+import { getChantiers, createChantier, updateChantier, deleteChantier, getClients, getClientById } from '../../../api/chefProjet';
 import './Chantiers.css';
 import { toast } from 'react-toastify';
-import { FaEdit, FaTrash, FaPlus, FaSpinner, FaEye } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaSpinner, FaEye, FaTimes } from 'react-icons/fa';
 import ChantierForm from './ChantierForm';
+import apiClient from '../../../api/config'; // Assurez-vous que le chemin est correct
 
-// Les imports Leaflet sont maintenant dans ChantierForm.jsx
 
 export default function Chantiers({ user }) {
   const [chantiers, setChantiers] = useState([]);
+  const [clients, setClients] = useState(new Map());
   const [loading, setLoading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -20,16 +21,28 @@ export default function Chantiers({ user }) {
     nom: '',
     proprietaireEmail: '',
     proprietaireTelephone: '',
-    proprietaireType: 'email' // 'email' ou 'telephone'
+    proprietaireType: 'email' // Compatibilité avec ChantierForm
   });
+  const [showClientModal, setShowClientModal] = useState(false);
+  const [selectedClient, setSelectedClient] = useState(null);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const data = await getChantiers();
-      setChantiers(data.chantiers || []);
+      const [chantiersData, clientsData] = await Promise.all([getChantiers(), getClients()]);
+      const clientMap = new Map(clientsData.users.map(client => [client.id, `${client.prenom} ${client.nom}`]));
+      setClients(clientMap);
+
+      const normalizedChantiers = (chantiersData.chantiers || []).map(chantier => ({
+        ...chantier,
+        geolocalisation: typeof chantier.geolocalisation === 'string'
+          ? { address: chantier.geolocalisation }
+          : (chantier.geolocalisation || { address: 'Non spécifié' }),
+        proprietaireNom: clientMap.get(chantier.proprietaireId) || 'Non défini'
+      }));
+      setChantiers(normalizedChantiers);
     } catch (e) {
-      toast.error('Erreur lors du chargement des chantiers ❌');
+      toast.error('Erreur lors du chargement des données ❌');
       setChantiers([]);
     }
     setLoading(false);
@@ -39,19 +52,21 @@ export default function Chantiers({ user }) {
 
   const handleSubmit = async () => {
     try {
+      const geolocalisation = { address: address || 'Adresse non spécifiée' };
+      const proprietaireEmailOrTel = form.proprietaireType === 'email' ? form.proprietaireEmail : form.proprietaireTelephone;
       if (form.id) {
         await updateChantier(form.id, {
           nom: form.nom,
-          geolocalisation: `${selectedLocation[0]}, ${selectedLocation[1]}`,
-          proprietaireEmailOrTel: form.proprietaireEmail || form.proprietaireTelephone
+          geolocalisation,
+          proprietaireEmailOrTel
         });
         toast.success('Chantier modifié avec succès ✏️');
         setShowEditForm(false);
       } else {
         await createChantier({
           nom: form.nom,
-          geolocalisation: useMap ? `${selectedLocation[0]}, ${selectedLocation[1]}` : address,
-          proprietaireEmailOrTel: form.proprietaireType === 'email' ? form.proprietaireEmail : form.proprietaireTelephone
+          geolocalisation,
+          proprietaireEmailOrTel
         });
         toast.success('Chantier ajouté avec succès ✅');
         setShowCreateForm(false);
@@ -70,8 +85,10 @@ export default function Chantiers({ user }) {
       id: chantier.id,
       nom: chantier.nom || '',
       proprietaireEmail: chantier.proprietaireEmailOrTel || '',
-      proprietaireTelephone: chantier.proprietaireEmailOrTel || ''
+      proprietaireTelephone: chantier.proprietaireEmailOrTel || '',
+      proprietaireType: chantier.proprietaireEmailOrTel?.includes('@') ? 'email' : 'telephone'
     });
+    setAddress(chantier.geolocalisation?.address || '');
     setShowEditForm(true);
   };
 
@@ -90,7 +107,6 @@ export default function Chantiers({ user }) {
   const handleMapClick = useCallback((e) => {
     const newLocation = [e.latlng.lat, e.latlng.lng];
     setSelectedLocation(newLocation);
-    // Ici on pourrait faire un reverse geocoding pour obtenir l'adresse
     setAddress(`Lat: ${newLocation[0].toFixed(6)}, Lng: ${newLocation[1].toFixed(6)}`);
   }, []);
 
@@ -102,49 +118,41 @@ export default function Chantiers({ user }) {
     setShowCreateForm(false);
   }, []);
 
-  const handleViewProprietaire = useCallback(async (proprietaireEmailOrTel) => {
-    try {
-      // Rechercher le client par email ou téléphone
-      const response = await fetch(`/api/chef-projet/clients?search=${encodeURIComponent(proprietaireEmailOrTel)}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('firebaseToken') || localStorage.getItem('authToken') || localStorage.getItem('token')}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        const client = data.users?.find(user => 
-          user.email === proprietaireEmailOrTel || user.telephone === proprietaireEmailOrTel
-        );
-        
-        if (client) {
-          // Afficher les informations du client dans un modal
-          const clientInfo = `
-            👤 Informations du Client:
-            
-            Nom: ${client.prenom} ${client.nom}
-            Email: ${client.email}
-            Téléphone: ${client.telephone}
-            Adresse: ${client.adresse || 'Non renseignée'}
-            Rôle: ${client.role}
-          `;
-          alert(clientInfo);
-        } else {
-          toast.error('Client non trouvé dans la base de données');
-        }
-      } else {
-        toast.error('Erreur lors de la recherche du client');
-      }
-    } catch (error) {
-      console.error('Erreur:', error);
-      toast.error('Erreur lors de la consultation du propriétaire');
+const handleViewProprietaire = useCallback(async (proprietaireId) => {
+  try {
+    const response = await apiClient.get('/chef-projet/clients', {
+      params: { search: proprietaireId, role: 'client' }
+    });
+
+    console.log("🔍 Résultat brut API:", response);
+
+    const users = response?.data?.users;
+
+    if (!users || !Array.isArray(users)) {
+      throw new Error('Aucun utilisateur trouvé dans la réponse');
     }
-  }, []);
+
+    const client = users.find(user => user.id === proprietaireId);
+
+    if (client) {
+      setSelectedClient(client);
+      setShowClientModal(true);
+    } else {
+      toast.error('Client non trouvé dans la base de données');
+    }
+  } catch (error) {
+    console.error('Erreur dans handleViewProprietaire:', error);
+    toast.error('Erreur lors de la consultation du propriétaire: ' + error.message);
+  }
+}, []);
+
+
 
   const EditChantierForm = () => (
     <div className="modal-form">
-      <form className="chantier-form" onSubmit={handleSubmit}>
+      <form className="chantier-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
         <input placeholder="Nom" value={form.nom} onChange={(e) => setForm({ ...form, nom: e.target.value })} required />
+        <input placeholder="Adresse" value={address} onChange={(e) => setAddress(e.target.value)} required />
         <input placeholder="Email ou téléphone du client" value={form.proprietaireEmail} onChange={(e) => setForm({ ...form, proprietaireEmail: e.target.value })} required />
         <button type="submit">Modifier</button>
         <button type="button" onClick={() => setShowEditForm(false)}>Annuler</button>
@@ -201,26 +209,51 @@ export default function Chantiers({ user }) {
           <tbody>
             {chantiers.map((chantier) => (
               <tr key={chantier.id}>
-                <td>{chantier.nom}</td>
-                <td>{chantier.geolocalisation}</td>
-                <td>{chantier.proprietaireEmailOrTel || 'Non défini'}</td>
+                <td>{chantier.nom || 'Non défini'}</td>
+                <td>{chantier.geolocalisation?.address || 'Non spécifié'}</td>
+                <td>
+                  {chantier.proprietaireNom}
+                  {chantier.proprietaireId && (
+                    <button 
+                      className="icon-btn view-proprietaire-btn" 
+                      onClick={() => handleViewProprietaire(chantier.proprietaireId)}
+                      title="Consulter le propriétaire"
+                    >
+                      <FaEye />
+                    </button>
+                  )}
+                </td>
                 <td>
                   <button className="icon-btn" onClick={() => handleEdit(chantier)}><FaEdit /></button>
                   <button className="icon-btn" onClick={() => handleDelete(chantier.id)}><FaTrash /></button>
-                   {chantier.proprietaireEmailOrTel && (
-                     <button 
-                       className="icon-btn view-proprietaire-btn" 
-                       onClick={() => handleViewProprietaire(chantier.proprietaireEmailOrTel)}
-                       title="Consulter le propriétaire"
-                     >
-                       <FaEye />
-                     </button>
-                   )}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+      )}
+
+      {showClientModal && selectedClient && (
+        <div className="client-modal-overlay">
+          <div className="client-modal">
+            <div className="client-modal-header">
+              <h3>Informations du Client</h3>
+              <button className="close-btn" onClick={() => setShowClientModal(false)}>
+                <FaTimes />
+              </button>
+            </div>
+            <div className="client-modal-content">
+              <p><strong>Nom :</strong> {selectedClient.prenom} {selectedClient.nom}</p>
+              <p><strong>Email :</strong> {selectedClient.email || 'Non renseigné'}</p>
+              <p><strong>Téléphone :</strong> {selectedClient.telephone || 'Non renseigné'}</p>
+              <p><strong>Adresse :</strong> {selectedClient.adresse || 'Non renseignée'}</p>
+              <p><strong>Rôle :</strong> {selectedClient.role}</p>
+            </div>
+            <button className="modal-close-btn" onClick={() => setShowClientModal(false)}>
+              Fermer
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
