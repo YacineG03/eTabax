@@ -58,7 +58,7 @@
 }
 
 .user-info {
-  display: flex;
+  bottom: 90;
   align-items: center;
   padding: 18px 20px;
   border-bottom: 1px solid #f7f7f7;

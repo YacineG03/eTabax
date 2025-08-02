@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
+import Accueil from './components/Accueil';
 import DashboardChefProjet from './components/Dashboard/ChefProjet/DashboardChefProjet';
 import DashboardConducteurTravaux from './components/Dashboard/ConducteurTravaux/DashboardConducteurTravaux';
 import DashboardChefChantier from './components/Dashboard/ChefChantier/DashboardChefChantier';
@@ -12,7 +14,7 @@ import './App.css';
 
 function App() {
   const [user, setUser] = useState(null);
-  const [page, setPage] = useState('login');
+  const [page, setPage] = useState('accueil');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -29,7 +31,7 @@ function App() {
       setPage('dashboard');
     } else {
       setUser(null);
-      setPage('login');
+      setPage('accueil');
     }
   }, []);
 
@@ -42,6 +44,10 @@ function App() {
 
   if (page === 'login') return layoutWithToast(<Login onNavigate={p => setPage(p)} />);
   if (page === 'register') return layoutWithToast(<Register onNavigate={p => setPage(p)} />);
+  if (page === 'accueil') return layoutWithToast(<Accueil onNavigate={p => setPage(p)} />);
+  if (!user) return layoutWithToast(<Accueil onNavigate={p => setPage(p)} />);
+
+  
 
   const role = user?.role?.toLowerCase().replace(/\s/g, '');
   if (role === 'chef-projet' || role === 'chefdeprojet') {
@@ -57,7 +63,18 @@ function App() {
     return layoutWithToast(<DashboardChefEquipe user={user} />);
   }
   if (role === 'fournisseur') {
-    return layoutWithToast(<DashboardFournisseur user={user} />);
+    return layoutWithToast(
+      <Router>
+        <Routes>
+          <Route path="/dashboard-fournisseur" element={<DashboardFournisseur user={user} currentPage="dashboard-fournisseur" />} />
+          <Route path="/magasin" element={<Magasin user={user} currentPage="magasin" />} />
+          <Route path="/profil" element={<Profil user={user} currentPage="profil" />} />
+          <Route path="/mes-commandes" element={<MesCommandes user={user} currentPage="mes-commandes" />} />
+          <Route path="/bons-commande" element={<BonsCommande user={user} currentPage="bons-commande" />} />
+          <Route path="*" element={<Navigate to="/dashboard-fournisseur" />} />
+        </Routes>
+      </Router>
+    );
   }
 
   return layoutWithToast(<div>Bienvenue sur le Dashboard</div>);

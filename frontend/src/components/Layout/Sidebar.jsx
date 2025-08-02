@@ -31,6 +31,7 @@ const Sidebar = ({ user, currentPage, onNavigate }) => {
   // Configuration des menus par rôle
   const menuConfig = {
     'chef-projet': [
+      { id: 'Profil', label: 'Profil', icon: FaHome, path: 'Profil' },
       { id: 'dashboard', label: 'Dashboard général', icon: FaHome, path: 'dashboard' },
       { id: 'carte', label: 'Carte chantier', icon: FaMap, path: 'carte' },
       { id: 'indicateurs', label: 'Indicateurs & Graphiques', icon: FaChartBar, path: 'indicateurs' },
@@ -41,45 +42,41 @@ const Sidebar = ({ user, currentPage, onNavigate }) => {
       { id: 'rapports', label: 'Rapports & Export', icon: FaFileAlt, path: 'rapports' },
       { id: 'parametres', label: 'Paramètres projet', icon: FaCog, path: 'parametres' }
     ],
-    'conducteur-travaux': [
+    'client': [
       { id: 'vue-chantier', label: 'Vue chantier', icon: FaHome, path: 'vue-chantier' },
       { id: 'zones', label: 'Zones & Activités', icon: FaMap, path: 'zones' },
       { id: 'planning-equipes', label: 'Planning équipes', icon: FaCalendarAlt, path: 'planning-equipes' },
       { id: 'commandes', label: 'Commandes & Stock', icon: FaBoxes, path: 'commandes' },
-      { id: 'cameras', label: 'Caméras & Sécurité', icon: FaVideo, path: 'cameras' },
       { id: 'alertes-incidents', label: 'Alertes & Incidents', icon: FaExclamationTriangle, path: 'alertes-incidents' },
-      { id: 'optimisation', label: 'Optimisation IA', icon: FaBrain, path: 'optimisation' },
       { id: 'communication', label: 'Communication', icon: FaComments, path: 'communication' },
-      { id: 'parametres', label: 'Paramètres', icon: FaCog, path: 'parametres' }
+      { id: 'profil', label: 'profil', icon: FaCog, path: 'profil' }
     ],
-    'chef-chantier': [
-      { id: 'mon-espace', label: 'Mon espace', icon: FaHome, path: 'mon-espace' },
-      { id: 'taches', label: 'Tâches journalières', icon: FaClipboardList, path: 'taches' },
-      { id: 'pointage', label: 'Pointage ouvriers', icon: FaUsers, path: 'pointage' },
-      { id: 'cameras-zone', label: 'Caméras (zone)', icon: FaVideo, path: 'cameras-zone' },
-      { id: 'securite', label: 'Sécurité & EPI', icon: FaShieldAlt, path: 'securite' },
-      { id: 'stock-commandes', label: 'Stock & Commandes rapides', icon: FaBoxes, path: 'stock-commandes' },
-      { id: 'meteo', label: 'Météo & Planning', icon: FaCloudSun, path: 'meteo' },
-      { id: 'notifications', label: 'Notifications', icon: FaBell, path: 'notifications' },
-      { id: 'briefing', label: 'Briefing sécurité', icon: FaBook, path: 'briefing' }
-    ],
-    'chef-equipe': [
-      { id: 'tableau-bord', label: 'Tableau de bord', icon: FaHome, path: 'tableau-bord' },
-      { id: 'taches-avancement', label: 'Tâches & Avancement', icon: FaClipboardList, path: 'taches-avancement' },
-      { id: 'equipe-presences', label: 'Équipe & Présences', icon: FaUsers, path: 'equipe-presences' },
-      { id: 'securite-zone', label: 'Sécurité (zone)', icon: FaShieldAlt, path: 'securite-zone' },
-      { id: 'materiaux', label: 'Matériaux affectés', icon: FaBoxes, path: 'materiaux' },
-      { id: 'anomalies', label: 'Anomalies / Retards', icon: FaExclamationTriangle, path: 'anomalies' },
-      { id: 'sensibilisation', label: 'Sensibilisation sécurité', icon: FaBook, path: 'sensibilisation' }
-    ],
+    // 'chef-chantier': [
+    //   { id: 'mon-espace', label: 'Mon espace', icon: FaHome, path: 'mon-espace' },
+    //   { id: 'taches', label: 'Tâches journalières', icon: FaClipboardList, path: 'taches' },
+    //   { id: 'pointage', label: 'Pointage ouvriers', icon: FaUsers, path: 'pointage' },
+    //   { id: 'cameras-zone', label: 'Caméras (zone)', icon: FaVideo, path: 'cameras-zone' },
+    //   { id: 'securite', label: 'Sécurité & EPI', icon: FaShieldAlt, path: 'securite' },
+    //   { id: 'stock-commandes', label: 'Stock & Commandes rapides', icon: FaBoxes, path: 'stock-commandes' },
+    //   { id: 'meteo', label: 'Météo & Planning', icon: FaCloudSun, path: 'meteo' },
+    //   { id: 'notifications', label: 'Notifications', icon: FaBell, path: 'notifications' },
+    //   { id: 'briefing', label: 'Briefing sécurité', icon: FaBook, path: 'briefing' }
+    // ],
+    // 'chef-equipe': [
+    //   { id: 'tableau-bord', label: 'Tableau de bord', icon: FaHome, path: 'tableau-bord' },
+    //   { id: 'taches-avancement', label: 'Tâches & Avancement', icon: FaClipboardList, path: 'taches-avancement' },
+    //   { id: 'equipe-presences', label: 'Équipe & Présences', icon: FaUsers, path: 'equipe-presences' },
+    //   { id: 'securite-zone', label: 'Sécurité (zone)', icon: FaShieldAlt, path: 'securite-zone' },
+    //   { id: 'materiaux', label: 'Matériaux affectés', icon: FaBoxes, path: 'materiaux' },
+    //   { id: 'anomalies', label: 'Anomalies / Retards', icon: FaExclamationTriangle, path: 'anomalies' },
+    //   { id: 'sensibilisation', label: 'Sensibilisation sécurité', icon: FaBook, path: 'sensibilisation' }
+    // ],
     'fournisseur': [
+      { id: 'mon-espace-fournisseur', label: 'Mon espace fournisseur', icon: FaUserCog, path: 'dashboard-fournisseur' },
       { id: 'mes-commandes', label: 'Mes commandes', icon: FaHome, path: 'mes-commandes' },
-      { id: 'produits', label: 'Produits / Services', icon: FaBoxes, path: 'produits' },
+      { id: 'magasin', label: 'matériaux / Services', icon: FaBoxes, path: 'magasin' },
       { id: 'bons-commande', label: 'Bons de commande', icon: FaFileAlt, path: 'bons-commande' },
-      { id: 'livraisons', label: 'Livraisons planifiées', icon: FaTruck, path: 'livraisons' },
-      { id: 'messages', label: 'Messages clients', icon: FaComments, path: 'messages' },
-      { id: 'historique', label: 'Historique / Factures', icon: FaChartLine, path: 'historique' },
-      { id: 'mon-espace-fournisseur', label: 'Mon espace fournisseur', icon: FaUserCog, path: 'mon-espace-fournisseur' }
+      { id: 'profil', label: 'profil', icon: FaUsers, path: 'profil' },
     ]
   };
 
@@ -169,9 +166,7 @@ const Sidebar = ({ user, currentPage, onNavigate }) => {
 const getRoleLabel = (role) => {
   const roleLabels = {
     'chef-projet': 'Chef de Projet',
-    'conducteur-travaux': 'Conducteur des Travaux',
-    'chef-chantier': 'Chef de Chantier',
-    'chef-equipe': 'Chef d\'Équipe',
+    'client': 'Client',
     'fournisseur': 'Fournisseur'
   };
   return roleLabels[role] || 'Utilisateur';

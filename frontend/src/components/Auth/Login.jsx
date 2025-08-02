@@ -96,6 +96,22 @@ function Login({ onNavigate }) {
       {/* Section gauche - Formulaire */}
       <div className="form-section">
         <div className="form-content">
+          <button
+              type="button"
+              onClick={() => onNavigate('accueil')}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                marginBottom: 10,
+                marginRight: 1,
+                fontSize: 24,
+                color: '#222'
+              }}
+              aria-label="Retour accueil"
+            >
+              ←
+            </button>
           {/* Logo et titre */}
           <div className="logo-section">
             <img src={logo} alt="E-TABAX Logo" className="logo" />
@@ -128,7 +144,7 @@ function Login({ onNavigate }) {
                 placeholder="••••••"
                 required
               />
-              <button type="button" className="forgot-password">Mot de passe oublié?</button>
+              <a className="forgot-password">Mot de passe oublié?</a>
             </div>
 
             {error && <div className="error-message">{error}</div>}
@@ -139,7 +155,8 @@ function Login({ onNavigate }) {
 
           {/* Séparateur */}
           <div className="separator">
-            <span>Ou</span>
+            <span></span>
+            <div className='ou'>OU</div>
           </div>
 
           {/* Boutons de connexion sociale */}
@@ -164,7 +181,7 @@ function Login({ onNavigate }) {
           {/* Lien d'inscription */}
           <div className="auth-link">
             <span>Vous n'avez pas de compte? </span>
-            <button type="button" className="link" onClick={() => onNavigate('register')}>Inscrivez-vous</button>
+            <a  className="link" onClick={() => onNavigate('register')}>Inscrivez-vous</a>
           </div>
         </div>
       </div>

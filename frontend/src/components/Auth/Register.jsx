@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './Auth.css';
 import logo from '../../assets/logo.png';
 import planImage from '../../assets/plan.jpg';
@@ -14,11 +14,19 @@ function Register({ onNavigate }) {
     email: '',
     motDePasse: '',
     confirmerMotDePasse: '',
-    role: 'chef-projet' // Rôle forcé
+    role: '' 
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [errors, setErrors] = useState([]);
+
+   useEffect(() => {
+    const savedRole = localStorage.getItem('registerRole');
+    if (savedRole) {
+      setFormData(prev => ({ ...prev, role: savedRole }));
+      localStorage.removeItem('registerRole');
+    }
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -42,13 +50,18 @@ function Register({ onNavigate }) {
       setLoading(false);
       return;
     }
+    if (!formData.role) {
+      setError('Veuillez sélectionner un rôle');
+      setLoading(false);
+      return;
+    }
 
     try {
       console.log('FormData envoyé:', formData); // Pour debug
       const response = await authAPI.register(formData);
       if (response.success) {
         // Rediriger vers la page de connexion après inscription
-        window.location.href = '/login';
+        onNavigate('login');
       } else if (response.errors && response.errors.length > 0) {
         setErrors(response.errors.map(err => err.msg));
         setError(response.message || 'Erreur lors de l\'inscription');
@@ -105,6 +118,22 @@ function Register({ onNavigate }) {
       {/* Section gauche - Formulaire */}
       <div className="form-section">
         <div className="form-content">
+          <button
+              type="button"
+              onClick={() => onNavigate('accueil')}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                marginBottom: 10,
+                marginRight: 1,
+                fontSize: 24,
+                color: '#222'
+              }}
+              aria-label="Retour accueil"
+            >
+              ←
+            </button>
           {/* Logo et titre */}
           <div className="logo-section">
             <img src={logo} alt="E-TABAX Logo" className="logo" />
@@ -160,6 +189,23 @@ function Register({ onNavigate }) {
                 required
               />
             </div>
+
+            <div className="form-group">
+            <label htmlFor="role">Rôle</label>
+            <select
+              id="role"
+              name="role"
+              value={formData.role}
+              onChange={handleInputChange}
+              required
+              disabled={!!formData.role}
+            >
+              <option value="">Sélectionnez un rôle</option>
+              <option value="chef-projet">Chef de Projet</option>
+              <option value="fournisseur">Fournisseur</option>
+              <option value="client">Client</option>
+            </select>
+          </div>
 
             <div className="form-group">
               <label htmlFor="email">Email</label>
@@ -238,7 +284,7 @@ function Register({ onNavigate }) {
           {/* Lien de connexion */}
           <div className="auth-link">
             <span>Vous avez déjà un compte? </span>
-            <button type="button" className="link" onClick={() => onNavigate('login')}>Connectez-vous</button>
+            <a type="a" className="link" onClick={() => onNavigate('login')}>Connectez-vous</a>
           </div>
         </div>
       </div>

@@ -1,0 +1,94 @@
+/* Fond général */
+.dashboard-role {
+  background: #faf9fb;
+}
+
+/* Cartes principales */
+.dashboard-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px 0 #f3f1f7;
+  padding: 28px 32px 20px 32px;
+  min-width: 220px;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  transition: box-shadow 0.2s;
+}
+
+.dashboard-card-title {
+  font-size: 1.05rem;
+  color: #b3b3b3;
+  font-weight: 500;
+  margin-bottom: 6px;
+  letter-spacing: 0.01em;
+}
+
+.dashboard-card-value {
+  font-size: 2.3rem;
+  font-weight: 700;
+  color: #232323;
+  letter-spacing: 0.02em;
+  margin-bottom: 2px;
+}
+
+/* Bloc graphique */
+.dashboard-graph {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px 0 #f3f1f7;
+  padding: 28px 32px 20px 32px;
+  min-width: 320px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.dashboard-graph ul {
+  margin-top: 18px;
+}
+
+.dashboard-graph li {
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+  font-size: 1.05rem;
+  color: #444;
+  font-weight: 500;
+}
+
+.dashboard-graph span {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  margin-right: 10px;
+  border: 2px solid #f3f1f7;
+}
+
+/* Titres */
+h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #232323;
+  margin-bottom: 28px;
+  letter-spacing: 0.01em;
+}
+
+/* Espacements */
+.dashboard-role > div {
+  margin-left: 0;
+}
+
+@media (max-width: 900px) {
+  .dashboard-card, .dashboard-graph {
+    min-width: unset;
+    width: 100%;
+    margin-bottom: 16px;
+  }
+  .dashboard-role {
+    flex-direction: column;
+  }
+}
