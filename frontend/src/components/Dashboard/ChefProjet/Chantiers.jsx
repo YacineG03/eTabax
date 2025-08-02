@@ -4,8 +4,7 @@ import './Chantiers.css';
 import { toast } from 'react-toastify';
 import { FaEdit, FaTrash, FaPlus, FaSpinner, FaEye, FaTimes } from 'react-icons/fa';
 import ChantierForm from './ChantierForm';
-import apiClient from '../../../api/config'; // Assurez-vous que le chemin est correct
-
+import apiClient from '../../../api/config';
 
 export default function Chantiers({ user }) {
   const [chantiers, setChantiers] = useState([]);
@@ -21,7 +20,7 @@ export default function Chantiers({ user }) {
     nom: '',
     proprietaireEmail: '',
     proprietaireTelephone: '',
-    proprietaireType: 'email' // Compatibilité avec ChantierForm
+    proprietaireType: 'email'
   });
   const [showClientModal, setShowClientModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
@@ -30,7 +29,7 @@ export default function Chantiers({ user }) {
     setLoading(true);
     try {
       const [chantiersData, clientsData] = await Promise.all([getChantiers(), getClients()]);
-      const clientMap = new Map(clientsData.users.map(client => [client.id, `${client.prenom} ${client.nom}`]));
+      const clientMap = new Map(clientsData.users.map(client => [client.id, client]));
       setClients(clientMap);
 
       const normalizedChantiers = (chantiersData.chantiers || []).map(chantier => ({
@@ -38,7 +37,7 @@ export default function Chantiers({ user }) {
         geolocalisation: typeof chantier.geolocalisation === 'string'
           ? { address: chantier.geolocalisation }
           : (chantier.geolocalisation || { address: 'Non spécifié' }),
-        proprietaireNom: clientMap.get(chantier.proprietaireId) || 'Non défini'
+        proprietaireNom: clientMap.get(chantier.proprietaireId)?.prenom + ' ' + clientMap.get(chantier.proprietaireId)?.nom || 'Non défini'
       }));
       setChantiers(normalizedChantiers);
     } catch (e) {
@@ -54,20 +53,17 @@ export default function Chantiers({ user }) {
     try {
       const geolocalisation = { address: address || 'Adresse non spécifiée' };
       const proprietaireEmailOrTel = form.proprietaireType === 'email' ? form.proprietaireEmail : form.proprietaireTelephone;
+      const payload = {
+        nom: form.nom,
+        geolocalisation,
+        proprietaireEmailOrTel
+      };
       if (form.id) {
-        await updateChantier(form.id, {
-          nom: form.nom,
-          geolocalisation,
-          proprietaireEmailOrTel
-        });
+        await updateChantier(form.id, payload);
         toast.success('Chantier modifié avec succès ✏️');
         setShowEditForm(false);
       } else {
-        await createChantier({
-          nom: form.nom,
-          geolocalisation,
-          proprietaireEmailOrTel
-        });
+        await createChantier(payload);
         toast.success('Chantier ajouté avec succès ✅');
         setShowCreateForm(false);
       }
@@ -76,17 +72,20 @@ export default function Chantiers({ user }) {
       setUseMap(true);
       fetchData();
     } catch (err) {
-      toast.error('Erreur lors de la soumission ❌');
+      console.error('Erreur lors de la soumission:', err);
+      toast.error('Erreur lors de la soumission ❌: ' + err.message);
     }
   };
 
   const handleEdit = (chantier) => {
+    const client = clients.get(chantier.proprietaireId);
+    const proprietaireEmailOrTel = client ? (client.email || client.telephone || chantier.proprietaireEmailOrTel || '') : chantier.proprietaireEmailOrTel || '';
     setForm({
       id: chantier.id,
       nom: chantier.nom || '',
-      proprietaireEmail: chantier.proprietaireEmailOrTel || '',
-      proprietaireTelephone: chantier.proprietaireEmailOrTel || '',
-      proprietaireType: chantier.proprietaireEmailOrTel?.includes('@') ? 'email' : 'telephone'
+      proprietaireEmail: proprietaireEmailOrTel,
+      proprietaireTelephone: proprietaireEmailOrTel,
+      proprietaireType: proprietaireEmailOrTel.includes('@') ? 'email' : 'telephone'
     });
     setAddress(chantier.geolocalisation?.address || '');
     setShowEditForm(true);
@@ -118,45 +117,57 @@ export default function Chantiers({ user }) {
     setShowCreateForm(false);
   }, []);
 
-const handleViewProprietaire = useCallback(async (proprietaireId) => {
-  try {
-    const response = await apiClient.get('/chef-projet/clients', {
-      params: { search: proprietaireId, role: 'client' }
-    });
+  const handleViewProprietaire = useCallback(async (proprietaireId) => {
+    try {
+      const response = await getClientById(proprietaireId);
+      console.log('🔍 Client récupéré:', response);
 
-    console.log("🔍 Résultat brut API:", response);
-
-    const users = response?.data?.users;
-
-    if (!users || !Array.isArray(users)) {
-      throw new Error('Aucun utilisateur trouvé dans la réponse');
+      const client = response?.client;
+      if (client) {
+        setSelectedClient(client);
+        setShowClientModal(true);
+      } else {
+        toast.error('Client non trouvé dans la base de données');
+      }
+    } catch (error) {
+      console.error('Erreur dans handleViewProprietaire:', error);
+      toast.error('Erreur lors de la consultation du propriétaire: ' + error.message);
     }
-
-    const client = users.find(user => user.id === proprietaireId);
-
-    if (client) {
-      setSelectedClient(client);
-      setShowClientModal(true);
-    } else {
-      toast.error('Client non trouvé dans la base de données');
-    }
-  } catch (error) {
-    console.error('Erreur dans handleViewProprietaire:', error);
-    toast.error('Erreur lors de la consultation du propriétaire: ' + error.message);
-  }
-}, []);
-
-
+  }, []);
 
   const EditChantierForm = () => (
-    <div className="modal-form">
-      <form className="chantier-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-        <input placeholder="Nom" value={form.nom} onChange={(e) => setForm({ ...form, nom: e.target.value })} required />
-        <input placeholder="Adresse" value={address} onChange={(e) => setAddress(e.target.value)} required />
-        <input placeholder="Email ou téléphone du client" value={form.proprietaireEmail} onChange={(e) => setForm({ ...form, proprietaireEmail: e.target.value })} required />
-        <button type="submit">Modifier</button>
-        <button type="button" onClick={() => setShowEditForm(false)}>Annuler</button>
-      </form>
+    <div className="edit-modal-overlay">
+      <div className="edit-modal">
+        <div className="edit-modal-header">
+          <h3>Modifier un chantier</h3>
+          <button className="close-btn" onClick={() => setShowEditForm(false)}>
+            <FaTimes />
+          </button>
+        </div>
+        <div className="edit-modal-content">
+          <form className="chantier-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+            <div className="form-group">
+              <label>Nom</label>
+              <input placeholder="Nom" value={form.nom} onChange={(e) => setForm({ ...form, nom: e.target.value })} required />
+            </div>
+            <div className="form-group">
+              <label>Adresse</label>
+              <input placeholder="Adresse" value={address} onChange={(e) => setAddress(e.target.value)} required />
+            </div>
+            <div className="form-group">
+              <label>Email ou téléphone du client</label>
+              <input
+                placeholder="Email ou téléphone"
+                value={form.proprietaireEmail}
+                disabled
+                readOnly
+              />
+            </div>
+            <button type="submit" className="create-btn">Modifier</button>
+            <button type="button" className="modal-close-btn" onClick={() => setShowEditForm(false)}>Annuler</button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 

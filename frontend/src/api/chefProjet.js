@@ -10,8 +10,6 @@ export const getChantiers = async () => {
   }
 };
 
-
-
 export const getChantier = async (id) => {
   try {
     const response = await apiClient.get(`/chef-projet/chantiers/${id}`);
